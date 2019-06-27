@@ -55,7 +55,7 @@ def sessionManager(region):
                 env = k.get('Value')
                 
         if env.lower() == 'prod':
-            m = '*[AWS] EC2 Instance session manager*\n - user : {}\n - instance ID : {}\n - start time : {}'.format(i['Owner'], i['Target'], i['StartDate'])
+            m = '*[AWS] EC2 Instance session manager*\n - user : {}\n - instnace Name : {}\n - instance ID : {}\n - start time : {}'.format(i['Owner'], name, i['Target'], i['StartDate'])
             toSlack(m)
             
         
