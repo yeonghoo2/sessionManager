@@ -13,8 +13,10 @@ def sessionManagerReport(region):
     data = []
     et = datetime.utcnow()
     et = et.strftime('%Y-%m-%d'+'T'+'00:00:00'+'Z')
+    et_t = et.strftime('%Y-%m-%d')
     st = datetime.utcnow() - timedelta(days=7)
     st = st.strftime('%Y-%m-%d'+'T'+'00:00:00'+'Z')
+    st_t = st.strftime('%Y-%m-%d')
     
     ec2_ssm = boto3.client(
         'ssm',
@@ -70,7 +72,7 @@ def sessionManagerReport(region):
     sns.relplot(x="user", y="time", data=df, height=6, aspect=2, kind="scatter")
     
     plt.xticks(rotation=50)
-    # plt.title("Prod instance session manager\n", size = 25)
+    plt.title('{0} ~ {1}'.format(st_t, et_t), size = 25)
     # plt.show()
     plt.tight_layout()
     plt.savefig('./tmp.png', dpi=160)
