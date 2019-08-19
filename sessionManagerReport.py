@@ -75,7 +75,7 @@ def sessionManagerReport(region):
     plt.title('{0} ~ {1}'.format(st_t, et_t), size = 25)
     # plt.show()
     plt.tight_layout()
-    plt.savefig('./tmp.png', dpi=160)
+    plt.savefig('./tmp.png', dpi=160, bbox_inches = 'tight')
     toSlackImage(region)
     
     """
