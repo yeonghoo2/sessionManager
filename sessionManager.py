@@ -40,9 +40,10 @@ def sessionManager(region):
         ]
     )
     for i in sessions['Sessions']:
-        # print(i['Owner'])
-        # print(i['Target'])
-        # print(i['StartDate'])
+        role = i['Owner']
+        user = i['SessionId']
+        target = i['Target']
+        s_date = i['StartDate']
 
         instance = ec2_resource.Instance(i['Target'])
         tmp_ec2 = instance.tags
@@ -55,7 +56,7 @@ def sessionManager(region):
                 env = k.get('Value')
                 
         if env.lower() == 'prod':
-            m = '*[AWS] EC2 Instance session manager*\n - user : {}\n - instnace Name : {}\n - instance ID : {}\n - start time : {}'.format(i['Owner'], name, i['Target'], i['StartDate'])
+            m = f"*[AWS] EC2 Instance session manager*\n - role : {role}\n - user : {user}\n - instnace Name : {name}\n - instance ID : {target}\n - start time : {s_date}"
             toSlack(m)
             
         
