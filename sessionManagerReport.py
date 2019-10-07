@@ -35,6 +35,7 @@ def sessionManagerReport(region):
 
     sessions = ec2_ssm.describe_sessions(
         State = 'History',
+        MaxResults=200,
         Filters = [
             {
                 'key': 'InvokedAfter',
