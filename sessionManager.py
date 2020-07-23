@@ -2,70 +2,59 @@ import requests
 import time
 from datetime import datetime, timedelta
 import boto3
+import json
 
-access_key = ''
-secret_key = ''
-slack_test_url = ''
+url = ""
+slack_test_url = '' # martin channel
 
-def sessionManager(region):
-    t = datetime.utcnow() - timedelta(seconds=65)
-    t = t.strftime('%Y-%m-%d'+'T'+'%H:%M:%S'+'Z')
-    
+chk_time = datetime.utcnow() - timedelta(seconds=60)
+chk_time = chk_time.strftime('%Y-%m-%d'+'T'+'%H:%M:%S'+'Z')
+
+def get_ec2_env(ec2, ec2_object):
+    instance = ec2_object.Instance(ec2)
+    return [k.get('Value').lower() for k in instance.tags if k.get('Key') == 'system:Environment']
+
+def get_ec2_name(ec2, ec2_object):
+    instance = ec2_object.Instance(ec2)
+    return [k.get('Value').lower() for k in instance.tags if k.get('Key') == 'Name']
+
+def session_manager(region, state):
     ec2_ssm = boto3.client(
         'ssm',
-        # Hard coded strings as credentials, not recommended.
-        aws_access_key_id = access_key,
-        aws_secret_access_key = secret_key,
         region_name = region
     )
     ec2_resource = boto3.resource(
         'ec2',
-        # Hard coded strings as credentials, not recommended.
-        aws_access_key_id = access_key,
-        aws_secret_access_key = secret_key,
         region_name = region
-    )    
+    )
 
     sessions = ec2_ssm.describe_sessions(
-        State = 'Active',
+        State = state,
         Filters = [
             {
                 'key': 'InvokedAfter',
-                'value': t
-            },
-            {
-                'key': 'Status',
-                'value': 'Connected'
+                'value': chk_time
             },
         ]
     )
-    for i in sessions['Sessions']:
-        role = i['Owner']
-        user = i['SessionId']
-        target = i['Target']
-        s_date = i['StartDate']
+    session_info = [[i['Owner'], i['SessionId'], i['Target'], i['StartDate'], get_ec2_name(i['Target'], ec2_resource)[0]] for i in sessions['Sessions'] if get_ec2_env(i['Target'], ec2_resource) == ['dev']]
 
-        instance = ec2_resource.Instance(i['Target'])
-        tmp_ec2 = instance.tags
-        env = ''
-        name = ''
-        for k in tmp_ec2:
-            if k.get('Key') == 'Name':
-                name = k.get('Value')            
-            if k.get('Key') == 'system:Environment':
-                env = k.get('Value')
-                
-        if env.lower() == 'prod':
-            m = f"*[AWS] EC2 Instance session manager*\n - role : {role}\n - user : {user}\n - instnace Name : {name}\n - instance ID : {target}\n - start time : {s_date}"
-            toSlack(m)
+    for i in session_info:
+        message = f"*[AWS] EC2 Instance session manager*\n - role : {i[0]}\n - user : {i[1]}\n - instance name : {i[4]}\n - instance id : {i[2]}\n - start time : {i[3]}"
+        # print(message)
+        to_slack(message, slack_test_url)
             
-        
-def toSlack(m):
-    payload = {'text': m}
-    requests.post(slack_test_url, json = payload)
+def to_slack(m, url):
+    headers = {'Content-Type': 'application/json; charset=utf-8'}
+    data = {
+        "channel": "ssh-logins",
+        "username": "ssh-bot",
+        "text" : m
+    }
+    requests.post(url, headers=headers, data=json.dumps(data))
 
-if __name__ == '__main__':
-    sessionManager('us-east-1')
-    # sessionManager('ap-northeast-2')
+region = ['ap-northeast-2', 'us-east-1', 'ap-northeast-2', 'us-east-1']
+state = ['Active', 'History', 'History', 'Active']
+list(map(session_manager, region, state))
 
         
