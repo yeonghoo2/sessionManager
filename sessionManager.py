@@ -7,7 +7,7 @@ import json
 url = ""
 slack_test_url = '' # martin channel
 
-chk_time = datetime.utcnow() - timedelta(seconds=60)
+chk_time = datetime.utcnow() - timedelta(seconds=60.1)
 chk_time = chk_time.strftime('%Y-%m-%d'+'T'+'%H:%M:%S'+'Z')
 
 def get_ec2_env(ec2, ec2_object):
